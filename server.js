@@ -1,7 +1,7 @@
-//Toggles
+// Toggle configuration variables
 var youtube_open = false;
 var ai_enabled = true;
-// Imports
+// Import required dependencies
 const tmi = require("tmi.js");
 const request = require("request");
 const express = require("express");
@@ -16,11 +16,13 @@ const { CensorSensor } = require("censor-sensor");
 const http = require("http");
 const path = require("path");
 const basicAuth = require("express-basic-auth");
+
+// Set up Express and SocketIO server configurations
 const app = express();
 const port = 3000;
 const server = http.createServer(app);
 const io = socketIo(server);
-// Youtube API config
+// Set up YouTube API configuration
 const youtube = google.youtube({
   version: "v3",
   auth: process.env.youtube_api_key,
@@ -30,12 +32,12 @@ const youtube = google.youtube({
     },
   },
 });
-// OpenAI config
+// Set up OpenAI API configuration
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
-// Twitch config
+// Set up Twitch client configuration
 console.log("bot_account", process.env.bot_account);
 const client = new tmi.Client({
   options: { debug: true },
@@ -46,7 +48,7 @@ const client = new tmi.Client({
   channels: [process.env.twitch_channel],
 });
 client.connect();
-// Express config
+// Configure Express app settings
 var dir = path.join(__dirname, "public");
 app.use(
   express.static(dir, {
@@ -57,21 +59,21 @@ app.use(
 server.listen(3000, () => {
   console.log("listening on *:3000");
 });
-// Database config
+// Set up Jsoning databases for configuration and data
 const jsoning = require("jsoning");
 let settings_db = new jsoning("db/queue_settings.json");
 let youtube_db = new jsoning("db/youtube.json");
 let historical_youtube_db = new jsoning("db/historical_youtube.json");
 let social_scores_db = new jsoning("db/social_scores.json");
 
-//Censor config
+// Configure CensorSensor to disable specific censorship tiers
 const censor = new CensorSensor();
 censor.disableTier(2);
 censor.disableTier(3);
 censor.disableTier(4);
 censor.disableTier(5);
 
-// Socket stuff
+// Handle Socket.IO events
 io.on("connection", (socket) => {
   console.log("a user connected");
   socket.on("youtube_deleted", (arg, callback) => {
@@ -151,7 +153,7 @@ io.on("connection", (socket) => {
     callback("youtube_moderated processed");
   });
 });
-// Express routes
+// Set up Express routes
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.get(
@@ -218,7 +220,7 @@ app.get("/youtube_queue", function (req, res) {
   });
 });
 
-// Twitch Bot
+// Main Twitch bot logic
 client.on("message", async (channel, tags, message, self) => {
   // Ignore echoed messages.
   if (self) return;
@@ -472,6 +474,7 @@ client.on("message", async (channel, tags, message, self) => {
   }
 }); // End Chatbot
 
+// Helper functions
 function removeURLs(text) {
   return text.replace(/(https?:\/\/[^\s]+)/g, "");
 }
