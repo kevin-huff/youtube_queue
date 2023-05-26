@@ -1,7 +1,7 @@
 // Default configuration variables
-let youtube_open = false;
+let youtube_open = true;
 let ai_enabled = true;
-let max_vids_per_user = 1; 
+let max_vids_per_user = 5; 
 let ai_memory_limit = 1;
 // Import required dependencies
 const tmi = require("tmi.js");
@@ -372,7 +372,7 @@ client.on("message", async (channel, tags, message, self) => {
       );
     }
   }
-  if (message.toLowerCase().startsWith("!set_max")) {
+  if (message.toLowerCase().startsWith("!max_vids")) {
     // check if mod
     if (isModUp) {
       const parts = message.split(' ');

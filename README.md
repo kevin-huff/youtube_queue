@@ -5,7 +5,7 @@ Youtube Queue is a Twitch Bot built for the purpose of free media sharing. It ma
 ## Features
 
 - YouTube queue management: Open or close the queue, remove entries, and list queued videos.
-- Social scores: Handles and provides social score information.
+- Social scores: The streamer rates every video, and each user has their own Social Score based off these ratings.
 - AI capabilities: Toggles the AI functionality and uses AI to generate interactive responses.
 - Twitch interaction: Listens for specific commands in Twitch chat and performs corresponding actions.
 
@@ -16,7 +16,7 @@ The bot listens for the following commands in Twitch chat:
 - `!open_yt` - Opens the YouTube queue. (Only available to moderators)
 - `!close_yt` - Closes the YouTube queue. (Only available to moderators)
 - `!clear_yt` - Clears the YouTube queue. (Only available to moderators)
-- `!set_max $num` - Set's the max vids per user allowed in the queue to `$num` (Only available to moderators)
+- `!max_vids $num` - Set's the max vids per user allowed in the queue to `$num` (Only available to moderators)
 - `!social_scores` - Shows the URL where users can see their social score.
 - `!list_yt` - Shows the URL where users can see the YouTube queue list.
 - `!myscore` - Shows the user's social score, rank, and rating based on the weighted score.
