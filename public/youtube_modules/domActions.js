@@ -69,6 +69,9 @@ export function initializeDOMActions(social_scores) {
   $("#social_sort").click(function () {
     socialSort(social_scores);
   });
+  $("#time-sort").click(function () {
+    sortCards();
+  });
   utils.updateLeaderboard(social_scores);
 }
 
@@ -96,6 +99,7 @@ export function shuffleCards() {
   let cardsAnimated = 0; // Counter for the number of cards that have finished animating
   // randomly select a jquery ui effect
   var effect = effects[Math.floor(Math.random() * effects.length)];
+  scrollPage(totalTime,.5);
   // Loop through the shuffled array and append each card to the container element with animation
   cards.forEach((card, index) => {
     // randomly select a jquery ui effect
@@ -115,6 +119,52 @@ export function shuffleCards() {
         });
       });
     // Disable the click handlers while the animations are running
+    disableClickHandlers();
+  });
+
+  utils.countVideos();
+}
+
+export function sortCards() {
+  console.log('sortCards');
+  const countdown = document.getElementById(`countdown`);
+  countdown.volume = 0.5;
+  countdown.play();
+  const container = document.querySelector("#youtube_videos");
+  const cards = Array.from(container.querySelectorAll(".col"));
+
+  // Sort the cards based on the video duration
+  cards.sort((a, b) => {
+    const durationA = a.querySelector('.duration').textContent;
+    const durationB = b.querySelector('.duration').textContent;
+
+    const [minutesA, secondsA] = durationA.split(':').map(Number);
+    const [minutesB, secondsB] = durationB.split(':').map(Number);
+
+    // Convert the duration to seconds for comparison
+    return (minutesA * 60 + secondsA) - (minutesB * 60 + secondsB);
+  });
+
+  const numCards = cards.length;
+  const totalTime = 25000;
+  const delayIncrement = totalTime / numCards;
+  const animationDuration = 5000;
+  let cardsAnimated = 0;
+  scrollPage(totalTime,.5);
+  var effect = effects[Math.floor(Math.random() * effects.length)];
+  cards.forEach((card, index) => {
+    var effect = effects[Math.floor(Math.random() * effects.length)];
+    $(card)
+      .delay(delayIncrement * index)
+      .hide(effect, {}, animationDuration, function () {
+        container.appendChild(card);
+        $(card).show(effect, {}, animationDuration, function () {
+          cardsAnimated++;
+          if (cardsAnimated === numCards) {
+            enableClickHandlers();
+          }
+        });
+      });
     disableClickHandlers();
   });
 
@@ -183,6 +233,8 @@ export function makeFair(social_scores) {
   const animationDuration = 5000;
   let cardsAnimated = 0;
 
+  scrollPage(totalTime,.5);
+
   shuffledCards.forEach((card, index) => {
     // randomly select a jquery ui effect
     var effect = effects[Math.floor(Math.random() * effects.length)];
@@ -241,6 +293,7 @@ export function socialSort(social_scores) {
   const delayIncrement = totalTime / numCards;
   const animationDuration = 5000; // 2 seconds in milliseconds
   let cardsAnimated = 0; // Counter for the number of cards that have finished animating
+  scrollPage(totalTime,.5);
   // Loop through the sorted array and append each card to the container element with animation
   cards.forEach((card, index) => {
     // randomly select a jquery ui effect
@@ -409,10 +462,55 @@ function disableClickHandlers() {
   $("#shuffle").prop("disabled", true);
   $("#make_fair").prop("disabled", true);
   $("#social_sort").prop("disabled", true);
+  $("#time-sort").prop("disabled", true);
 }
 
 function enableClickHandlers() {
   $("#shuffle").prop("disabled", false);
   $("#make_fair").prop("disabled", false);
   $("#social_sort").prop("disabled", false);
+  $("#time-sort").prop("disabled", false);
 }
+
+export function scrollPage(duration, cycles) {
+  let start = null;
+  const maxScrollTop = document.body.scrollHeight - window.innerHeight;
+  let direction = 1;  // 1 for down, -1 for up
+  let cycle = 0;
+
+  function step(timestamp) {
+    if (!start) start = timestamp;
+    const elapsed = timestamp - start;
+
+    // Calculate the fraction of the duration that has passed
+    const fraction = Math.min(1, (elapsed / duration));
+
+    // Calculate which cycle we are in
+    cycle = Math.floor(fraction * cycles * 2);
+
+    // Calculate the position within the current cycle
+    const cyclePos = (fraction * cycles * 2) - cycle;
+
+    // Determine scroll direction based on cycle
+    direction = (cycle % 2 === 0) ? 1 : -1;
+
+    // Use this fraction to determine the target scroll position
+    const target = cyclePos * maxScrollTop;
+
+    // Scroll the page
+    setTimeout(function () {
+      window.scrollTo({
+        top: Math.abs(target * direction),
+        behavior: 'auto'
+      });
+    }, 200);
+
+    // If we haven't finished all the cycles yet, continue on the next frame
+    if (elapsed < duration) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+

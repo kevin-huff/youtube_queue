@@ -156,6 +156,27 @@ io.on("connection", (socket) => {
     io.emit("update_youtube_moderated", arg);
     callback("youtube_moderated processed");
   });
+  // Add a socket.io event listener for rating a user
+  socket.on("rateUser", (ratingObj) => {
+    console.log('ratingObj',ratingObj);
+
+    // Get the current ratings from the database
+    let currentRatings = social_scores_db.get(ratingObj.username.trim());
+
+    // If the user has not been rated before, create a new entry in the database
+    if (currentRatings === null) {
+      currentRatings = [];
+    }
+
+    // Add the new rating to the list of ratings for this user
+    currentRatings.push(ratingObj.rating);
+
+    // Save the updated list of ratings for this user to the database
+    social_scores_db.set(ratingObj.username, currentRatings);
+
+    // Emit the new rating to the middleware
+    io.emit("newRating", ratingObj.username, ratingObj.rating);
+  });
 });
 // Set up Express routes
 app.use(express.static("public"));
