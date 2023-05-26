@@ -9,10 +9,29 @@ Youtube Queue is a Twitch Bot built for the purpose of free media sharing. It ma
 - AI capabilities: Toggles the AI functionality and uses AI to generate interactive responses.
 - Twitch interaction: Listens for specific commands in Twitch chat and performs corresponding actions.
 
+## Chat Commands
+
+The bot listens for the following commands in Twitch chat:
+
+- `!open_yt` - Opens the YouTube queue. (Only available to moderators)
+- `!close_yt` - Closes the YouTube queue. (Only available to moderators)
+- `!clear_yt` - Clears the YouTube queue. (Only available to moderators)
+- `!set_max $num` - Set's the max vids per user allowed in the queue to `$num` (Only available to moderators)
+- `!social_scores` - Shows the URL where users can see their social score.
+- `!list_yt` - Shows the URL where users can see the YouTube queue list.
+- `!myscore` - Shows the user's social score, rank, and rating based on the weighted score.
+- `!toggle_ai` - Toggles the AI functionality. (Only available to moderators)
+
 ## Prerequisites
 To use Youtube Queue, ensure that you have the following installed:
 
 - [Node.js](https://nodejs.org/) (version 16 or newer)
+
+You need the following creds:
+
+- [OpenAI API Key](https://platform.openai.com/account/api-keys) - For AI Responses
+- [Twitch OAuth](https://twitchapps.com/tmi/) - For Chatbot
+- [Youtube Data API Key](https://developers.google.com/youtube/registering_an_application) - To get video information
 
 ## Installation
 
@@ -32,7 +51,7 @@ npm install
 
 ## Usage
 
-Rename `.env.example` file in the root directory of your project to `.env`. Add environment-specific variables on new lines in the form of `NAME=VALUE`.
+Rename `.env.example` file in the root directory of your project to `.env`. Add the required environment-specific variables.
 
 Run the application:
 ```
@@ -40,8 +59,10 @@ npm start
 ```
 
 
-Visit `http://localhost:3000` or the port specified in your environment variables on your browser to interact with the application.
-
+- Visit `http://localhost:3000/youtube` and use the credntials you provided in your environment variables to interact with the application.
+- Use `!open_yt` to open the youtube queue
+- Any valid youtube link sent in chat will automaticlly get added to the queue.
+- Use the `/youtube` page to shuffle, sort, play, delete, and rate the user's videos
 ## Web Pages
 The application includes several pages:
 
@@ -69,7 +90,7 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 Please make sure to update tests as appropriate.
 
 ## License
-[MIT](https://choosealicense.com/licenses/mit/)
+[Unlicense](https://unlicense.org)
 
 ## Support
 
@@ -78,12 +99,10 @@ If you have any issues or enhancement requests, feel free to report them via the
 ## Acknowledgements
 
 - [Google APIs](https://github.com/googleapis/googleapis)
-- [Fuse.js](https://github.com/krisk/Fuse)
 - [Express.js](https://expressjs.com/)
 - [Socket.IO](https://socket.io/)
 - [tmi.js](https://github.com/tmijs)
-- [Spoken](https://www.npmjs.com/package/spoken)
-
+- [OpenAI](https://github.com/openai/openai-node)
 ## Authors
 
 - [Kevin Huff](https://github.com/kevin-huff)
