@@ -23,7 +23,6 @@ export function initializeDOMActions(social_scores,moderations) {
     var videoId = $(this).data("id");
     var rating = $("input[name='rating']:checked").val();
     $("#video-id").val(videoId); // set the value of the hidden input field to the video ID
-    console.log("rating set", rating);
     $(".star").removeClass("selected");
     $(this).addClass("selected");
   });
@@ -31,6 +30,7 @@ export function initializeDOMActions(social_scores,moderations) {
   $(document).on("click", ".remove-youtube-btn", function () {
     const videoId = $(this).data("video-id");
     removeYoutube(videoId);
+    $("#moderateModal").modal("hide");
   });
   // Add event listener for the remove-youtube-btn class
   $(document).on("click", ".watch-youtube-btn", function () {
@@ -44,8 +44,6 @@ export function initializeDOMActions(social_scores,moderations) {
     console.log("id", id);
     if (rating >= 0 && id) {
       var username = $("#username").val();
-      console.log("username", username);
-      console.log("rating", rating);
       $("#rateModal").modal("hide");
       socket.emit(
         "rateUser",
@@ -72,8 +70,21 @@ export function initializeDOMActions(social_scores,moderations) {
   $("#time-sort").click(function () {
     sortCards();
   });
+  $("#thumbsDownButton").click(function () {
+    var id = $("#moderateModal").attr("data-video-id"); // Get the updated id value
+    moderateYoutube(id, 0);
+    $("#moderateModal").modal("hide");
+  });
+  
+  $("#thumbsUpButton").click(function () {
+    var id = $("#moderateModal").attr("data-video-id"); // Get the updated id value
+    moderateYoutube(id, 1);
+    $("#moderateModal").modal("hide");
+  });
   utils.updateLeaderboard(social_scores);
+  //console.log("social_scores", social_scores);
   update_all_moderations(moderations);
+  //console.log("moderations", moderations);
 }
 
 export function shuffleCards() {
@@ -320,7 +331,6 @@ export function socialSort(social_scores) {
 }
 export function removeYoutube(id) {
   var row = document.getElementById("row_" + id);
-  var thumbnail_url = row.getElementsByTagName("img")[0].src;
   $("#row_" + id).toggle("explode", function () {
     row.remove();
     socket.emit("youtube_deleted", id, (response) => {
@@ -331,31 +341,27 @@ export function removeYoutube(id) {
 }
 
 export function watchYoutube(id) {
-  console.log("in watch youtube");
   var row = document.getElementById("row_" + id);
 
   // Show the rating modal dialog
-  var rateModal = $("#rateModal");
-  rateModal.attr("data-id", id); // Set the data-id attribute
-  rateModal.modal("show");
+  var moderateModal = $("#moderateModal");
+  moderateModal.attr("data-video-id", id); // Set the data-id attribute
+
+  // Set the data-video-id for the remove button
+  var removeButton = moderateModal.find('.remove-youtube-btn');
+  removeButton.attr("data-video-id", id);
+
+  moderateModal.modal("show");
 
   // Set the username in the modal dialog
-  $("#rateModalLabel").text(
-    "Rate this video for " + $(row).find(".username").text()
+  $("#moderateModalLabel").text(
+    "Moderate this video for " + $(row).find(".username").text()
   );
   $("#username").val($(row).find(".username").text());
-  $("#row_" + id).toggle("explode", function () {
-    row.remove();
-    const username = $(row).find(".username").text();
-    const timestamp = new Date().toISOString();
-    socket.emit("youtube_watched", id, username, timestamp, (response) => {
-      console.log("youtube_watched_response", response);
-      utils.updateWatchCount(response);
-    });
-    window.open("https://www.youtube.com/watch?v=" + id, "_blank");
-    utils.countVideos();
-  });
+  window.open("https://www.youtube.com/watch?v=" + id, "_blank");
+  utils.countVideos();
 }
+
 
 export function moderateYoutube(id, rating) {
   console.log("moderateYoutube emit ", id, rating);
@@ -405,6 +411,7 @@ export function update_moderation(id, rating) {
 }
 
 export function deleteYoutube(id) {
+  console.log("deleteYoutube dom action ", id);
   var row = document.getElementById("row_" + id);
   $("#row_" + id).toggle("explode", function () {
     row.remove();

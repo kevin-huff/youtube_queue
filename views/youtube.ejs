@@ -32,7 +32,7 @@
   <script type="module" src="youtube_queue.js"></script>
   <script>
     window.socialScoresData = <%- JSON.stringify(social_scores) %>;
-    console.log('EJS template social_scores:', window.socialScoresData);
+    window.moderationsData = <%- JSON.stringify(moderations) %>;
   </script>
   <style>
     .btn-fixed-bottom {
@@ -180,6 +180,15 @@
         opacity: 1;
         transform: scale(1);
       }
+    }
+    .moderation-icon {
+      position: absolute;
+      left: 0;
+      color: #fff;   /* Change color as needed */
+      font-size: 2em;   /* Change font size as needed */
+      background: rgba(0, 0, 0, 0.5);   /* Change background color as needed */
+      padding: 5px;
+      border-radius: 5px;
     }
   </style>
 

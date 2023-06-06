@@ -1,6 +1,6 @@
-import * as socketEvents from './youtube_modules/socketEvents.js';
-import * as domActions from './youtube_modules/domActions.js';
-import * as utils from './youtube_modules/utils.js';
+import * as socketEvents from './moderator_modules/socketEvents.js';
+import * as domActions from './moderator_modules/domActions.js';
+import * as utils from './moderator_modules/utils.js';
 
 const social_scores = window.socialScoresData;
 const moderations = window.moderationsData;

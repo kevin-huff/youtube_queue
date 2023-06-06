@@ -1,8 +1,10 @@
 // Default configuration variables
 let youtube_open = true;
 let ai_enabled = true;
-let max_vids_per_user = 5; 
+let max_vids_per_user = 6; 
 let ai_memory_limit = 1;
+let chatRatings = [];
+let lastChatRatingTime = Date.now();
 // Import required dependencies
 const tmi = require("tmi.js");
 const request = require("request");
@@ -69,7 +71,7 @@ let settings_db = new jsoning("db/queue_settings.json");
 let youtube_db = new jsoning("db/youtube.json");
 let historical_youtube_db = new jsoning("db/historical_youtube.json");
 let social_scores_db = new jsoning("db/social_scores.json");
-
+let moderation_db = new jsoning("db/moderation.json");
 // Configure CensorSensor to disable specific censorship tiers
 const censor = new CensorSensor();
 censor.disableTier(2);
@@ -94,7 +96,8 @@ io.on("connection", (socket) => {
     });
 
     if (youtube_exists == -1) {
-      console.log("youtube not found");
+
+      console.log("youtube_deleted: youtube not found");
     } else {
       console.log("youtube found");
       current_youtube.splice(youtube_exists, 1);
@@ -119,7 +122,7 @@ io.on("connection", (socket) => {
     // Add it to the historical database
     historical_youtube_db.push(id, { username, timestamp });
     if (youtube_exists == -1) {
-      console.log("youtube not found");
+      console.log("youtube_watched: youtube not found");
     } else {
       console.log("youtube found");
       // Remove it from the database
@@ -136,23 +139,9 @@ io.on("connection", (socket) => {
     callback(watch_count + 1);
   });
   socket.on("youtube_moderated", (arg, callback) => {
-    var current_youtube = youtube_db.get("youtube");
-    if (current_youtube == null) {
-      current_youtube = [];
-    }
-    //see if the youtube exists and remove it
-    var youtube_exists = current_youtube.findIndex(function (
-      current_youtube,
-      index
-    ) {
-      if (current_youtube["video"]["thumbnail_url"] == arg) return true;
-    });
-    if (youtube_exists == -1) {
-      console.log("youtube not found");
-    } else {
-      console.log("youtube found");
-      youtube_db.set("youtube", current_youtube);
-    }
+    // Save the rating to the moderation_db using the video's id as the key
+    moderation_db.set(arg.id, arg.rating);  
+    console.log("youtube_moderated:", arg);  
     io.emit("update_youtube_moderated", arg);
     callback("youtube_moderated processed");
   });
@@ -176,6 +165,8 @@ io.on("connection", (socket) => {
 
     // Emit the new rating to the middleware
     io.emit("newRating", ratingObj.username, ratingObj.rating);
+            chatRatings = [];
+        lastChatRatingTime = Date.now();
   });
 });
 // Set up Express routes
@@ -190,6 +181,7 @@ app.get(
   function (req, res) {
     let yt_count = settings_db.get("youtubes_watched");
     let social_scores = social_scores_db.all();
+    let moderation = moderation_db.all();
     let youtube_queue = youtube_db.get("youtube");
     //make queue empty if null
     if (youtube_queue == null) {
@@ -199,9 +191,47 @@ app.get(
     if (social_scores == null) {
       social_scores = [];
     }
+    //make moderation empty if null
+    if (moderation == null) {
+      moderation = [];
+    }
     res.render("youtube.ejs", {
       youtube: youtube_queue,
       social_scores: social_scores,
+      moderations: moderation,
+      yt_count: yt_count,
+      banner_image: process.env.banner_image,
+      formatDuration: formatDuration,
+    });
+  }
+);
+app.get(
+  "/moderate",
+  basicAuth({
+    users: { [process.env.mod_user]: process.env.mod_pass },
+    challenge: true,
+  }),
+  function (req, res) {
+    let yt_count = settings_db.get("youtubes_watched");
+    let social_scores = social_scores_db.all();
+    let moderation = moderation_db.all();
+    let youtube_queue = youtube_db.get("youtube");
+    //make queue empty if null
+    if (youtube_queue == null) {
+      youtube_queue = [];
+    }
+    //make social_scores empty if null
+    if (social_scores == null) {
+      social_scores = [];
+    }
+    //make moderation empty if null
+    if (moderation == null) {
+      moderation = [];
+    }
+    res.render("youtube_mod.ejs", {
+      youtube: youtube_queue,
+      social_scores: social_scores,
+      moderations: moderation,
       yt_count: yt_count,
       banner_image: process.env.banner_image,
       formatDuration: formatDuration,
@@ -254,7 +284,7 @@ client.on("message", async (channel, tags, message, self) => {
   let isModUp = isMod || isBroadcaster;
   let isSub = tags.subscriber;
   let isVIP = tags.badges && tags.badges.vip === "1";
-
+  getRatingFromChat(message.toLowerCase(),tags["display-name"]);
   //Add youtube vids to the youtubequeue
   //var regex = new RegExp("^(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$");
   if (message.toLowerCase().startsWith("http") && youtube_open) {
@@ -321,9 +351,9 @@ client.on("message", async (channel, tags, message, self) => {
                 channel,
                 client,
                 tags,
-                `Sorry @${tags["display-name"]}, you can only have 1 video in the queue at a time.`,
+                `Sorry @${tags["display-name"]}, you can only have ${max_vids_per_user} video in the queue at a time.`,
                 "",
-                "- Max Vids in queue"
+                `- ${max_vids_per_user} Max Vids in queue`
               );
             } else {
               const youtube_request = {
@@ -393,6 +423,21 @@ client.on("message", async (channel, tags, message, self) => {
       );
     }
   }
+  if (message.toLowerCase().startsWith("!chat_rating")) {
+      // check if mod
+      if (isModUp) {
+          let chat_rating = getAverageRating();
+          abbadabbabotSay(
+            channel,
+            client,
+            tags,
+            `Formally announce that chat's average rating is ${chat_rating} out of 4`,
+            "",
+            `- Chat's avg rating ${chat_rating}`
+          );
+      }
+  }
+
   if (message.toLowerCase().startsWith("!max_vids")) {
     // check if mod
     if (isModUp) {
@@ -485,7 +530,7 @@ client.on("message", async (channel, tags, message, self) => {
           .sort(([, a], [, b]) => b - a)
           .findIndex(([user]) => user === username) + 1;
 
-      const reply = `@${
+      const reply = `tell @${
         tags["display-name"]
       }, your weighted score is ${weightedRating.toFixed(
         2
@@ -496,9 +541,7 @@ client.on("message", async (channel, tags, message, self) => {
         tags,
         reply,
         "",
-        `- weighted score: ${weightedRating.toFixed(
-          2
-        )} based on ${numRatings} ratings. rank: #${rank} among all users.`
+        `- @${tags["display-name"]}: weighted score: ${weightedRating.toFixed(2)} based on ${numRatings} ratings. rank: #${rank} among all users.`
       );
     } else {
       abbadabbabotSay(
@@ -674,4 +717,63 @@ function average_rating_of_all_users(social_scores) {
   }
 
   return totalRatings / totalUsers;
+}
+
+function getRatingFromChat(message, username) {
+    console.log('checking for a rating');
+    let now = Date.now();
+
+    // Reset the ratings if it's been more than 3 minutes since the last rating
+    if (now - lastChatRatingTime > 1 * 60 * 1000) {
+        console.log('unsetting ratings');
+        chatRatings = [];
+        lastChatRatingTime = now;
+    }
+
+    // Regular expression to find a decimal number in the message
+    let regex = /\b(\d(\.\d)?|4(\.0)?)\b/;
+    let match = message.match(regex);
+
+    if (match) {     
+        let rating = parseFloat(match[0]);
+        console.log(`rating of ${rating} found.`);
+
+        // Check if it's been less than or equal to 3 minutes
+        if (now - lastChatRatingTime <= 1 * 60 * 1000 ) {
+            console.log('rating saved');
+
+            // Check if there is already a rating from this user
+            let userRating = chatRatings.find(r => r.username === username);
+
+            if (userRating) {
+                // If there is, replace it
+                userRating.rating = rating;
+                userRating.time = now;
+            } else {
+                // If not, add a new one
+                chatRatings.push({
+                    username: username,
+                    rating: rating,
+                    time: now
+                });
+            }
+            io.emit("chat_ratings_updated", chatRatings);
+            lastChatRatingTime = now;
+        }
+    }
+
+    console.log('chatRatings', chatRatings);
+}
+
+function getAverageRating() {
+    if (chatRatings.length === 0) {
+      console.log('no ratings yet');
+        return 0;
+    }
+
+    let sum = chatRatings.reduce((a, b) => a + b.rating, 0);
+    let average = sum / chatRatings.length;
+
+    // Round the average to the nearest 0.5
+    return Math.round(average * 2) / 2;
 }

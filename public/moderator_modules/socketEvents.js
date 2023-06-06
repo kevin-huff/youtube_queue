@@ -2,6 +2,7 @@ import * as domActions from "./domActions.js";
 import * as utils from "./utils.js";
 
 export const socket = io();
+
 export function initializeSocketEvents(social_scores) {
   var socket = io();
   socket.on("connect", () => {
@@ -13,7 +14,7 @@ export function initializeSocketEvents(social_scores) {
     utils.countVideos();
   });
   socket.on("youtube_remove", function (id) {
-    console.log("youtube_deleted");
+    console.log("youtube_deleted", id);
     domActions.deleteYoutube(id);
   });
   socket.on("update_youtube_moderated", function (arg) {
