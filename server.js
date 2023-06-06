@@ -165,8 +165,12 @@ io.on("connection", (socket) => {
 
     // Emit the new rating to the middleware
     io.emit("newRating", ratingObj.username, ratingObj.rating);
-            chatRatings = [];
+        //Reset the chat ratings
+        chatRatings = [];
         lastChatRatingTime = Date.now();
+        io.emit("new_chat_rating", [{ username: 'Abbabox', rating: ratingObj.rating }]);
+        io.emit("final_judgement", "Abbabox");
+        io.emit("average_chat_rating", ratingObj.rating);
   });
 });
 // Set up Express routes
@@ -247,6 +251,11 @@ app.get("/social_scores", function (req, res) {
   res.render("social_score.ejs", {
     social_scores: social_scores,
     banner_image: process.env.banner_image,
+  });
+});
+app.get("/chat_rating", function (req, res) {
+  res.render("chat_rating.ejs", {
+    avg_rating: getAverageRating(),
   });
 });
 app.get("/user_social_scores", function (req, res) {
@@ -731,7 +740,7 @@ function getRatingFromChat(message, username) {
     }
 
     // Regular expression to find a decimal number in the message
-    let regex = /\b(\d(\.\d)?|4(\.0)?)\b/;
+    let regex = /\b([0-3](\.\d+)?|4(\.0)?)\b/;
     let match = message.match(regex);
 
     if (match) {     
@@ -757,7 +766,8 @@ function getRatingFromChat(message, username) {
                     time: now
                 });
             }
-            io.emit("chat_ratings_updated", chatRatings);
+            io.emit("new_chat_rating", chatRatings);
+            io.emit("average_chat_rating", getAverageRating());
             lastChatRatingTime = now;
         }
     }
