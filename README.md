@@ -8,6 +8,8 @@ Youtube Queue is a Twitch Bot built for the purpose of free media sharing. It ma
 - Social scores: The streamer rates every video, and each user has their own Social Score based off these ratings.
 - AI capabilities: Toggles the AI functionality and uses AI to generate interactive responses.
 - Twitch interaction: Listens for specific commands in Twitch chat and performs corresponding actions.
+- When active watches chat messages for ratings in messages (any numbers 0-4 in any message in chat) and calculates chat's average rating. Each user's rating is only counted once. 
+- Moderation queue: A simple dashboard for trusted moderators to upvote, downvote, or delete videos from the queue. Will update the streamer's dashboard in real-time. 
 
 ## Chat Commands
 
@@ -21,6 +23,7 @@ The bot listens for the following commands in Twitch chat:
 - `!list_yt` - Shows the URL where users can see the YouTube queue list.
 - `!myscore` - Shows the user's social score, rank, and rating based on the weighted score.
 - `!toggle_ai` - Toggles the AI functionality. (Only available to moderators)
+- `!chat_avg` - Shows the current avg rating found in chat.
 
 ## Prerequisites
 To use Youtube Queue, ensure that you have the following installed:
@@ -32,7 +35,9 @@ You need the following creds:
 - [OpenAI API Key](https://platform.openai.com/account/api-keys) - For AI Responses
 - [Twitch OAuth](https://twitchapps.com/tmi/) - For Chatbot
 - [Youtube Data API Key](https://developers.google.com/youtube/registering_an_application) - To get video information
+## Quickstart
 
+If you want to get started quickly feel free to remix my [glitch app](https://glitch.com/edit/#!/youtube-queue). 
 ## Installation
 
 Clone the repository to your local machine:
@@ -70,6 +75,8 @@ The application includes several pages:
 - `/social_scores` - On Screen Leaderboard - use as browser source
 - `/user_social_scores` - User Accessable Leaderboard
 - `/youtube_queue` - User Accessable Queue List
+- `/moderate` - Moderation queue for trusted users to moderate videos in the queue.
+- `/chat_rating` - On screen element showing chat's average rating. Updates as vids are watched and when the streamer rates a video.
 
 ## Helper Methods
 

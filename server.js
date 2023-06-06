@@ -168,8 +168,8 @@ io.on("connection", (socket) => {
         //Reset the chat ratings
         chatRatings = [];
         lastChatRatingTime = Date.now();
-        io.emit("new_chat_rating", [{ username: 'Abbabox', rating: ratingObj.rating }]);
-        io.emit("final_judgement", "Abbabox");
+        io.emit("new_chat_rating", [{ username: process.env.twitch_channel, rating: ratingObj.rating }]);
+        io.emit("final_judgement", process.env.twitch_channel);
         io.emit("average_chat_rating", ratingObj.rating);
   });
 });
