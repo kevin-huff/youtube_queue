@@ -98,18 +98,18 @@ export function shuffleCards() {
   const delayIncrement = totalTime / numCards;
   const animationDuration = 5000; // 5 seconds in milliseconds
   let cardsAnimated = 0; // Counter for the number of cards that have finished animating
-  // randomly select a jquery ui effect
-  var effect = effects[Math.floor(Math.random() * effects.length)];
+  // select a jquery ui effect
+  var effect = effects[0]; // change this to the index of the desired effect
   scrollPage(totalTime,.5);
   // Loop through the shuffled array and append each card to the container element with animation
   cards.forEach((card, index) => {
-    // randomly select a jquery ui effect
-    var effect = effects[Math.floor(Math.random() * effects.length)];
+    // use the selected jquery ui effect
+    var effect = effects[0]; // change this to the index of the desired effect
     $(card)
-      .delay(delayIncrement * index)
-      .hide(effect, {}, animationDuration, function () {
+      .delay(delayIncrement * index * 2) // double the delay for a more dynamic effect
+      .hide(effect, {}, animationDuration / 2, function () { // halve the duration for a faster animation
         container.appendChild(card);
-        $(card).show(effect, {}, animationDuration, function () {
+        $(card).show(effect, {}, animationDuration / 2, function () { // halve the duration for a faster animation
           // Increment the counter when the animation completes
           cardsAnimated++;
 
@@ -546,4 +546,3 @@ export function scrollPage(duration, cycles) {
 
   requestAnimationFrame(step);
 }
-
